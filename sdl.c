@@ -151,8 +151,8 @@ bool DPadOppositeEverPressed = false;
 
 int16_t BuiltInJS_X = 0;
 int16_t BuiltInJS_Y = 0;
-int16_t GSensorJS_X = 0;
-int16_t GSensorJS_Y = 0;
+int16_t BuiltInJS_X2 = 0;
+int16_t BuiltInJS_Y2 = 0;
 
 struct DrawnElement {
 	      SDL_Rect   Rect;
@@ -170,7 +170,7 @@ SDL_RASTER_TYPE TextRumble;
 
 SDL_RASTER_TYPE TextCross;
 SDL_RASTER_TYPE TextAnalog;
-SDL_RASTER_TYPE TextGravity;
+SDL_RASTER_TYPE TextAnalog2;
 SDL_RASTER_TYPE TextFace;
 SDL_RASTER_TYPE TextOthers;
 
@@ -228,13 +228,13 @@ const SDL_Color ColorNeverPressed = {  32,  32,  32, 255 };
 
 const SDL_Color ColorCross        = { 255, 255,  32, 255 };
 const SDL_Color ColorAnalog       = {  32, 255,  32, 255 };
-const SDL_Color ColorGravity      = { 255, 128,  32, 255 };
+const SDL_Color ColorAnalog2      = { 255, 128,  32, 255 };
 const SDL_Color ColorFace         = {  32,  32, 255, 255 };
 const SDL_Color ColorOthers       = { 255,  32, 255, 255 };
 
 const SDL_Color ColorEverCross    = {  64,  64,  32, 255 };
 const SDL_Color ColorEverAnalog   = {  32,  64,  32, 255 };
-const SDL_Color ColorEverGravity  = {  64,  48,  32, 255 };
+const SDL_Color ColorEverAnalog2  = {  64,  48,  32, 255 };
 const SDL_Color ColorEverFace     = {  32,  32,  64, 255 };
 const SDL_Color ColorEverOthers   = {  64,  32,  64, 255 };
 
@@ -487,16 +487,15 @@ static void DrawScreen()
 	// A dot to indicate where the analog nub is pointed to, relative to the
 	// inner screen, as well as its coordinates
 	SDL_RASTER_TYPE BuiltInJSCoords = DrawJoystickDot(BuiltInJS_X, BuiltInJS_Y, TEXT_ANALOG_CX, TEXT_ANALOG_Y, TextAnalog, &ColorAnalog);
-
 	// And another for the gravity sensor
-	SDL_RASTER_TYPE GSensorJSCoords = DrawJoystickDot(GSensorJS_X, GSensorJS_Y, TEXT_GRAVITY_CX, TEXT_GRAVITY_Y, TextGravity, &ColorGravity);
+	SDL_RASTER_TYPE BuiltInJSCoords2 = DrawJoystickDot(BuiltInJS_X2, BuiltInJS_Y2, TEXT_GRAVITY_CX, TEXT_GRAVITY_Y, TextAnalog2, &ColorAnalog2);
 
 	PRESENT();
 
 	if (BuiltInJSCoords)
 		FREE_RASTER(BuiltInJSCoords);
-	if (GSensorJSCoords)
-		FREE_RASTER(GSensorJSCoords);
+	if (BuiltInJSCoords2)
+		FREE_RASTER(BuiltInJSCoords2);
 
 	SDL_Delay(8); // Reduce the delay between this update and the input for the next
 }
@@ -577,8 +576,8 @@ int main(int argc, char** argv)
 	TextCross = MAKE_RASTER(Text);
 	Text = TTF_RenderUTF8_Blended(Font, "Analog nub", ColorAnalog);
 	TextAnalog = MAKE_RASTER(Text);
-	Text = TTF_RenderUTF8_Blended(Font, "Gravity sensor", ColorGravity);
-	TextGravity = MAKE_RASTER(Text);
+	Text = TTF_RenderUTF8_Blended(Font, "Analog nub2", ColorAnalog2);
+	TextAnalog2 = MAKE_RASTER(Text);
 	Text = TTF_RenderUTF8_Blended(Font, "Face buttons", ColorFace);
 	TextFace = MAKE_RASTER(Text);
 	Text = TTF_RenderUTF8_Blended(Font, "Other buttons", ColorOthers);
@@ -629,7 +628,6 @@ int main(int argc, char** argv)
 	// Initialise joystick input.
 	SDL_JoystickEventState(SDL_ENABLE);
 	SDL_Joystick* BuiltInJS = NULL;
-	SDL_Joystick* GSensorJS = NULL;
 
 	for (i = 0; i < SDL_NumJoysticks(); i++)
 	{
@@ -637,8 +635,6 @@ int main(int argc, char** argv)
 
 		if (strcmp(JOYSTICK_NAME(i), "linkdev device (Analog 2-axis 8-button 2-hat)") == 0)
 			BuiltInJS = SDL_JoystickOpen(i);
-		else if (strcmp(JOYSTICK_NAME(i), "mxc6225") == 0)
-			GSensorJS = SDL_JoystickOpen(i);
 	}
 
 	bool Exit = false;
@@ -657,15 +653,12 @@ int main(int argc, char** argv)
 							BuiltInJS_X = Event.jaxis.value;
 						else if (Event.jaxis.axis == 1) /* Y */
 							BuiltInJS_Y = Event.jaxis.value;
+						else if (Event.jaxis.axis == 2) /* X */
+							BuiltInJS_X2 = Event.jaxis.value;
+						else if (Event.jaxis.axis == 3) /* Y */
+							BuiltInJS_Y2 = Event.jaxis.value;
 					}
-					else if (GSensorJS != NULL
-					      && Event.jaxis.which == JOYSTICK_INDEX(GSensorJS))
-					{
-						if (Event.jaxis.axis == 0) /* X */
-							GSensorJS_X = Event.jaxis.value;
-						else if (Event.jaxis.axis == 1) /* Y */
-							GSensorJS_Y = Event.jaxis.value;
-					}
+
 					break;
 				case SDL_JOYHATMOTION:
 					if (BuiltInJS != NULL
@@ -737,12 +730,10 @@ int main(int argc, char** argv)
 
 	if (BuiltInJS != NULL)
 		SDL_JoystickClose(BuiltInJS);
-	if (GSensorJS != NULL)
-		SDL_JoystickClose(GSensorJS);
 
 	FREE_RASTER(TextCross);
 	FREE_RASTER(TextAnalog);
-	FREE_RASTER(TextGravity);
+	FREE_RASTER(TextAnalog2);
 	FREE_RASTER(TextFace);
 	FREE_RASTER(TextOthers);
 
