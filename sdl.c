@@ -25,6 +25,7 @@
 #  include "SDL.h"
 #  define SDL_SCREEN_TYPE SDL_Surface*
 #  define SDL_RASTER_TYPE SDL_Surface*
+# include "shake.h"
 #elif defined SDL_2
 #  define SDL_VER_STR "2.0"
 #  include "SDL2/SDL.h"
@@ -164,9 +165,14 @@ SDL_SCREEN_TYPE Screen;
 #ifndef SDL_1
 SDL_Renderer* Renderer;
 SDL_Haptic* HapticDevice;
+#else
+Shake_Effect HapticEffect;	
+Shake_Device *HapticDevice;
+int id;
+#endif
+
 bool HapticActive = false;
 SDL_RASTER_TYPE TextRumble;
-#endif
 
 SDL_RASTER_TYPE TextCross;
 SDL_RASTER_TYPE TextAnalog;
@@ -263,7 +269,6 @@ bool MustExit(void)
 	return ElementPressed[ELEMENT_SELECT] && ElementPressed[ELEMENT_START];
 }
 
-#ifndef SDL_1
 void UpdateHaptic(void)
 {
 	bool NewHapticActive = ElementPressed[ELEMENT_L] && ElementPressed[ELEMENT_R];
@@ -271,23 +276,38 @@ void UpdateHaptic(void)
 	if (!HapticActive && NewHapticActive)
 	{
 		printf("Starting force feedback as requested by the user\n");
+#ifndef SDL_1
 		if (SDL_HapticRumblePlay(HapticDevice, 0.33f /* Strength */, 15000 /* Time */) < 0)
 		{
 			printf("SDL_HapticRumblePlay failed: %s\n", SDL_GetError());
 		}
+#else
+		if (Shake_Play(HapticDevice, id) < 0)
+		{
+			printf("SDL_HapticRumblePlay failed: %s\n", SDL_GetError());
+		}
+
+#endif
 	}
 	else if (HapticActive && !NewHapticActive)
 	{
+#ifndef SDL_1
 		printf("Stopping force feedback as requested by the user\n");
 		if (SDL_HapticRumbleStop(HapticDevice) < 0)
 		{
 			printf("SDL_HapticRumbleStop failed: %s\n", SDL_GetError());
 		}
+#else
+		printf("Stopping force feedback as requested by the user\n");
+		if (Shake_Stop(HapticDevice, id) < 0)
+		{
+			printf("SDL_HapticRumbleStop failed: %s\n", SDL_GetError());
+		}
+#endif
 	}
 
 	HapticActive = NewHapticActive;
 }
-#endif
 
 static int WIDTH(SDL_RASTER_TYPE Raster)
 {
@@ -440,15 +460,21 @@ static void DrawScreen()
 	SDL_Rect TextExitRect = { .x = TEXT_EXIT_RX - WIDTH(TextExit), .y = TEXT_EXIT_Y, .w = WIDTH(TextExit), .h = HEIGHT(TextExit) };
 	RENDER_RASTER(TextExit, &TextExitRect);
 
-#ifndef SDL_1
 	// Text prompt: L+R to rumble
+#ifndef SDL_1
+
+	if (HapticDevice != NULL)
+	{
+		SDL_Rect TextRumbleRect = { .x = TEXT_RUMBLE_RX - WIDTH(TextRumble), .y = TEXT_RUMBLE_Y, .w = WIDTH(TextRumble), .h = HEIGHT(TextRumble) };
+		RENDER_RASTER(TextRumble, &TextRumbleRect);
+	}
+#else
 	if (HapticDevice != NULL)
 	{
 		SDL_Rect TextRumbleRect = { .x = TEXT_RUMBLE_RX - WIDTH(TextRumble), .y = TEXT_RUMBLE_Y, .w = WIDTH(TextRumble), .h = HEIGHT(TextRumble) };
 		RENDER_RASTER(TextRumble, &TextRumbleRect);
 	}
 #endif
-
 	// Text prompt, if a direction is pressed on the cross
 	if (ElementPressed[0] || ElementPressed[1] || ElementPressed[2] || ElementPressed[3])
 	{
@@ -619,6 +645,36 @@ int main(int argc, char** argv)
 		Text = TTF_RenderUTF8_Blended(Font, "L+R to rumble", ColorPrompt);
 		TextRumble = MAKE_RASTER(Text);
 	}
+#else
+	printf("Shake_Init before\n");
+	Shake_Init();
+	printf("Shake_Init OK\n");
+	if (Shake_NumOfDevices() > 0)
+	{
+		HapticDevice = Shake_Open(0);
+
+		Shake_InitEffect(&HapticEffect, SHAKE_EFFECT_PERIODIC);
+		HapticEffect.u.periodic.waveform		= SHAKE_PERIODIC_SINE;
+		HapticEffect.u.periodic.period		= 0.1*0x100;
+		HapticEffect.u.periodic.magnitude		= 0x6000;
+		HapticEffect.u.periodic.envelope.attackLength	= 0x100;
+		HapticEffect.u.periodic.envelope.attackLevel	= 0;
+		HapticEffect.u.periodic.envelope.fadeLength	= 0x100;
+		HapticEffect.u.periodic.envelope.fadeLevel	= 0;
+		HapticEffect.direction			= 0x4000;
+		HapticEffect.length				= 2000;
+		HapticEffect.delay				= 0;
+
+		id = Shake_UploadEffect(HapticDevice, &HapticEffect);
+	}
+	printf("Shake_UploadEffect OK\n");
+	
+	if (HapticDevice != NULL)
+	{
+		Text = TTF_RenderUTF8_Blended(Font, "L+R to rumble", ColorPrompt);
+		TextRumble = MAKE_RASTER(Text);
+	}
+
 #endif
 
 #ifdef SDL_1
@@ -718,14 +774,19 @@ int main(int argc, char** argv)
 
 		DrawScreen();
 		Exit |= MustExit();
-#ifndef SDL_1
 		UpdateHaptic();
-#endif
 	} // while (!Exit)
 
 #ifndef SDL_1
 	if (HapticDevice != NULL)
 		SDL_HapticClose(HapticDevice);
+	
+#else
+	if (HapticDevice != NULL)
+	{
+		Shake_EraseEffect(HapticDevice, id);
+		Shake_Close(HapticDevice);
+	}
 #endif
 
 	if (BuiltInJS != NULL)

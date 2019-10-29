@@ -15,7 +15,7 @@ DEFS        +=
 
 CFLAGS       = -Wall -Wno-unused-variable \
                -O2 -fomit-frame-pointer $(DEFS) $(INCLUDE)
-LDFLAGS     :=
+LDFLAGS     := -lshake
 
 .PHONY: all opk
 
