@@ -50,17 +50,21 @@ enum Element {
 	ELEMENT_A,
 	ELEMENT_SELECT,
 	ELEMENT_START,
-	ELEMENT_L,
-	ELEMENT_R,
+	ELEMENT_L1,
+	ELEMENT_R1,
+	ELEMENT_L2,
+	ELEMENT_R2,
+	ELEMENT_L3,
+	ELEMENT_R3,
 	ELEMENT_POWER,
-	ELEMENT_HOLD,
+	
+	ELEMENT_COUNT
 };
-#define ELEMENT_COUNT   14
 
 /* These define the keys that are not covered by JS 0, or used when the
  * GCW Zero's buttons are not being mapped to JS 0. */
 #ifdef SDL_1
-SDLKey KeysHavingElements[ELEMENT_COUNT] = {
+SDLKey KeysHavingElements[] = {
 	SDLK_LEFT,
 	SDLK_RIGHT,
 	SDLK_UP,
@@ -71,13 +75,16 @@ SDLKey KeysHavingElements[ELEMENT_COUNT] = {
 	SDLK_SPACE,
 	SDLK_TAB,
 	SDLK_BACKSPACE,
+	SDLK_PAGEUP,
+	SDLK_PAGEDOWN,
+	SDLK_KP_DIVIDE,
+	SDLK_KP_PERIOD,
 	SDLK_ESCAPE,
 	SDLK_RETURN,
 	SDLK_HOME,
-	SDLK_PAUSE,
 };
 #else
-SDL_Scancode KeysHavingElements[ELEMENT_COUNT] = {
+SDL_Scancode KeysHavingElements[] = {
 	SDL_SCANCODE_LEFT,
 	SDL_SCANCODE_RIGHT,
 	SDL_SCANCODE_UP,
@@ -86,18 +93,21 @@ SDL_Scancode KeysHavingElements[ELEMENT_COUNT] = {
 	SDL_SCANCODE_LALT,
 	SDL_SCANCODE_LSHIFT,
 	SDL_SCANCODE_SPACE,
-	SDL_SCANCODE_TAB,
+	SDL_SCANCODE_TAB,	//R1
 	SDL_SCANCODE_BACKSPACE,
+	SDL_SCANCODE_PAGEUP,	//R2
+	SDL_SCANCODE_PAGEDOWN,
+	SDL_SCANCODE_KP_DIVIDE,
+	SDL_SCANCODE_KP_PERIOD,
 	SDL_SCANCODE_ESCAPE,
 	SDL_SCANCODE_RETURN,
 	SDL_SCANCODE_HOME,
-	SDL_SCANCODE_PAUSE,
 };
 #endif
 
 /* These define the elements that should be lit up by pressing the above keys,
  * ordered in the same way as in KeysHavingElements. */
-enum Element KeysToElements[ELEMENT_COUNT] = {
+enum Element KeysToElements[] = {
 	ELEMENT_DPAD_LEFT,
 	ELEMENT_DPAD_RIGHT,
 	ELEMENT_DPAD_UP,
@@ -106,28 +116,35 @@ enum Element KeysToElements[ELEMENT_COUNT] = {
 	ELEMENT_B,
 	ELEMENT_X,
 	ELEMENT_Y,
-	ELEMENT_L,
-	ELEMENT_R,
+	ELEMENT_L1,
+	ELEMENT_R1,
+	ELEMENT_L2,
+	ELEMENT_R2,
+	ELEMENT_L3,
+	ELEMENT_R3,
 	ELEMENT_SELECT,
 	ELEMENT_START,
 	ELEMENT_POWER,
-	ELEMENT_HOLD,
 };
 
 /* These define the elements that should be lit up by pressing JS 0's
  * buttons. */
-enum Element JoyButtonsToElements[8] = {
+enum Element JoyButtonsToElements[] = {
 	ELEMENT_B,
 	ELEMENT_A,
 	ELEMENT_Y,
 	ELEMENT_X,
+	ELEMENT_L1,
+	ELEMENT_R1,
+	ELEMENT_L2,
+	ELEMENT_R2,
 	ELEMENT_SELECT,
 	ELEMENT_START,
-	ELEMENT_L,
-	ELEMENT_R,
+	ELEMENT_L3,
+	ELEMENT_R3,
 };
 
-const char* ElementNames[ELEMENT_COUNT] = {
+const char* ElementNames[] = {
 	"D-pad Up",
 	"D-pad Down",
 	"D-pad Left",
@@ -138,10 +155,13 @@ const char* ElementNames[ELEMENT_COUNT] = {
 	"A",
 	"Select",
 	"Start",
-	"L",
-	"R",
+	"L1",
+	"R1",
+	"L2",
+	"R2",
+	"L3",
+	"R3",
 	"Power",
-	"Hold",
 };
 
 /* Last readings for all the elements and axes. */
@@ -201,7 +221,7 @@ TTF_Font* Font = NULL;
 #define GCW_ZERO_PIC_Y    43
 
 #define TEXT_CROSS_LX      4
-#define TEXT_CROSS_Y      20
+#define TEXT_CROSS_Y      4
 
 #define TEXT_ANALOG_CX   160
 #define TEXT_ANALOG_Y      4
@@ -213,7 +233,7 @@ TTF_Font* Font = NULL;
 #define TEXT_OTHERS_Y      4
 
 #define TEXT_FACE_RX     316
-#define TEXT_FACE_Y       20
+#define TEXT_FACE_Y       4
 
 #define TEXT_CROSS_ERR_LX  4
 #define TEXT_CROSS_ERR_Y 188
@@ -243,22 +263,30 @@ const SDL_Color ColorEverAnalog   = {  32,  64,  32, 255 };
 const SDL_Color ColorEverAnalog2  = {  64,  48,  32, 255 };
 const SDL_Color ColorEverFace     = {  32,  32,  64, 255 };
 const SDL_Color ColorEverOthers   = {  64,  32,  64, 255 };
+#define RG350_SHIFT 60
+struct DrawnElement DrawnElements[] = {
+	{ .Rect = { .x = 31, .y = 39 + RG350_SHIFT + GCW_ZERO_PIC_Y, .w = 14, .h = 14 }, .ColorPressed = &ColorCross, .ColorEverPressed = &ColorEverCross },
+	{ .Rect = { .x = 31, .y = 69 + RG350_SHIFT + GCW_ZERO_PIC_Y, .w = 14, .h = 14 }, .ColorPressed = &ColorCross, .ColorEverPressed = &ColorEverCross },
+	{ .Rect = { .x = 16, .y = 54 + RG350_SHIFT + GCW_ZERO_PIC_Y, .w = 14, .h = 14 }, .ColorPressed = &ColorCross, .ColorEverPressed = &ColorEverCross },
+	{ .Rect = { .x = 46, .y = 54 + RG350_SHIFT + GCW_ZERO_PIC_Y, .w = 14, .h = 14 }, .ColorPressed = &ColorCross, .ColorEverPressed = &ColorEverCross },
 
-struct DrawnElement DrawnElements[ELEMENT_COUNT] = {
-	{ .Rect = { .x = 32, .y = 38 + GCW_ZERO_PIC_Y, .w = 14, .h = 16 }, .ColorPressed = &ColorCross, .ColorEverPressed = &ColorEverCross },
-	{ .Rect = { .x = 32, .y = 68 + GCW_ZERO_PIC_Y, .w = 14, .h = 16 }, .ColorPressed = &ColorCross, .ColorEverPressed = &ColorEverCross },
-	{ .Rect = { .x = 16, .y = 54 + GCW_ZERO_PIC_Y, .w = 16, .h = 14 }, .ColorPressed = &ColorCross, .ColorEverPressed = &ColorEverCross },
-	{ .Rect = { .x = 46, .y = 54 + GCW_ZERO_PIC_Y, .w = 16, .h = 14 }, .ColorPressed = &ColorCross, .ColorEverPressed = &ColorEverCross },
 	{ .Rect = { .x = 272, .y = 33 + GCW_ZERO_PIC_Y, .w = 19, .h = 19 }, .ColorPressed = &ColorFace, .ColorEverPressed = &ColorEverFace },
 	{ .Rect = { .x = 272, .y = 71 + GCW_ZERO_PIC_Y, .w = 19, .h = 19 }, .ColorPressed = &ColorFace, .ColorEverPressed = &ColorEverFace },
 	{ .Rect = { .x = 253, .y = 52 + GCW_ZERO_PIC_Y, .w = 19, .h = 19 }, .ColorPressed = &ColorFace, .ColorEverPressed = &ColorEverFace },
 	{ .Rect = { .x = 291, .y = 52 + GCW_ZERO_PIC_Y, .w = 19, .h = 19 }, .ColorPressed = &ColorFace, .ColorEverPressed = &ColorEverFace },
-	{ .Rect = { .x = 266, .y = 96 + GCW_ZERO_PIC_Y, .w = 31, .h = 14 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
-	{ .Rect = { .x = 266, .y = 118 + GCW_ZERO_PIC_Y, .w = 31, .h = 14 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
-	{ .Rect = { .x = 9, .y = 3 + GCW_ZERO_PIC_Y, .w = 47, .h = 19 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
-	{ .Rect = { .x = 264, .y = 3 + GCW_ZERO_PIC_Y, .w = 47, .h = 19 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+
+	{ .Rect = { .x = 32+15, .y = 54, .w = 14, .h = 14 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+	{ .Rect = { .x = 260-15, .y = 54, .w = 14, .h = 14 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+
+	{ .Rect = { .x = 9, .y = 23, .w = 25, .h = 19 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+	{ .Rect = { .x = 290, .y = 23, .w = 25, .h = 19 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+	{ .Rect = { .x = 39, .y = 23 , .w = 25, .h = 19 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+	{ .Rect = { .x = 260, .y = 23 , .w = 25, .h = 19 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+
+	{ .Rect = { .x = 32, .y = 90, .w = 14, .h = 14 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+	{ .Rect = { .x = 276, .y = 180, .w = 14, .h = 14 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+
 	{ .Rect = { .x = 312, .y = 52 + GCW_ZERO_PIC_Y, .w = 6, .h = 21 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
-	{ .Rect = { .x = 312, .y = 73 + GCW_ZERO_PIC_Y, .w = 6, .h = 21 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
 };
 
 /* - - - HELPER FUNCTIONS - - - */
@@ -271,7 +299,7 @@ bool MustExit(void)
 
 void UpdateHaptic(void)
 {
-	bool NewHapticActive = ElementPressed[ELEMENT_L] && ElementPressed[ELEMENT_R];
+	bool NewHapticActive = ElementPressed[ELEMENT_L1] && ElementPressed[ELEMENT_R1];
 
 	if (!HapticActive && NewHapticActive)
 	{
