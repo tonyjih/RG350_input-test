@@ -57,7 +57,10 @@ enum Element {
 	ELEMENT_L3,
 	ELEMENT_R3,
 	ELEMENT_POWER,
-	
+#ifndef SDL_1
+	ELEMENT_VOLDOWN,
+	ELEMENT_VOLUP,
+#endif	
 	ELEMENT_COUNT
 };
 
@@ -82,6 +85,10 @@ SDLKey KeysHavingElements[] = {
 	SDLK_ESCAPE,
 	SDLK_RETURN,
 	SDLK_HOME,
+	/*
+	SDLK_VOLUMEDOWN,
+	SDLK_VOLUMEUP,
+	*/
 };
 #else
 SDL_Scancode KeysHavingElements[] = {
@@ -102,6 +109,8 @@ SDL_Scancode KeysHavingElements[] = {
 	SDL_SCANCODE_ESCAPE,
 	SDL_SCANCODE_RETURN,
 	SDL_SCANCODE_HOME,
+	SDL_SCANCODE_VOLUMEDOWN,
+	SDL_SCANCODE_VOLUMEUP
 };
 #endif
 
@@ -125,6 +134,10 @@ enum Element KeysToElements[] = {
 	ELEMENT_SELECT,
 	ELEMENT_START,
 	ELEMENT_POWER,
+#ifndef SDL_1
+	ELEMENT_VOLDOWN,
+	ELEMENT_VOLUP,
+#endif
 };
 
 /* These define the elements that should be lit up by pressing JS 0's
@@ -162,6 +175,10 @@ const char* ElementNames[] = {
 	"L3",
 	"R3",
 	"Power",
+#ifndef SDL_1	
+	"Vol-Down",
+	"Vol-Up",
+#endif
 };
 
 /* Last readings for all the elements and axes. */
@@ -287,6 +304,11 @@ struct DrawnElement DrawnElements[] = {
 	{ .Rect = { .x = 276, .y = 180, .w = 14, .h = 14 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
 
 	{ .Rect = { .x = 312, .y = 52 + GCW_ZERO_PIC_Y, .w = 6, .h = 21 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+#ifndef SDL_1
+	
+	{ .Rect = { .x = 135, .y = 214, .w = 20, .h = 5 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+	{ .Rect = { .x = 160, .y = 214, .w = 20, .h = 5 }, .ColorPressed = &ColorOthers, .ColorEverPressed = &ColorEverOthers },
+#endif
 };
 
 /* - - - HELPER FUNCTIONS - - - */
